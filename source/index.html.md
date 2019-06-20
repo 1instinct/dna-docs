@@ -15,18 +15,20 @@ search: true
 
 # Introduction
 
-Welcome to the technical documentation for the Material Instinct LLC - DNA Boilerplate.<%= config[:host] %>
+Welcome to the technical documentation for the Material Instinct LLC - DNA Boilerplate.
 
 # Local installation (without Docker)
 
 The platform has 4 parts which need to be installed in this order:  
+
 - DNA Admin  
 - DNA Database  
 - DNA API  
 - DNA Frontend  
+
 You will need access to each individual repository, or you will need to be added to an internal team with the appropriate access privileges.
 
-Requirements: ruby 2.6.2, rails 5.2.2, Postgres
+Requirements: ruby 2.6.2, rails 5.2.2, Postgres, node.js 10.16
 
 ## DNA Admin (Github repo: `dna-admin`)
 
@@ -34,53 +36,83 @@ Admin app for Spree.
 
 Local installation:
 
-1. Make sure you have `ImageMagick` installed; on Mac OSX you can do:  
+- Make sure you have `ImageMagick` installed; on Mac OSX you can do:
+
 `brew install imagemagick`  
+
 Brew will install ImageMagick in a directory similar to the following:   
 `/usr/local/Cellar/imagemagick/7.0.8-49/bin/magick`  
-You can add this dir to your PATH, for instance append the following to your `~/.bashrc` file:  
+
+You can add this dir to your PATH, for instance append the following to your `~/.bashrc` file:
+
 `export PATH=$PATH:/usr/local/Cellar/imagemagick/7.0.8-49/bin`  
-followed by the command  
-`source ~/.bashrc`  
-1. Clone this repo
-1. Copy `.env.example` to `.env.development`
-1. Edit `.env.development`:  
+
+followed by the command `source ~/.bashrc`.
+
+- Clone this repo
+
+- Copy `.env.example` to `.env.development`
+
+- Edit `.env.development`:
+
 Change `DATABASE_PORT` from `2345` to `5432`  
 Change `COMPANY_LOGO` from `path/to/file.png` to `dwell_logo.png`  
-1. Create the PostgreSQL user that we need:  
+
+- Create the PostgreSQL user that we need:
+
 `createuser --pwprompt dna_admin`  
+
 At the prompt, enter the DB password from the `.env.development` file.
-1. Create the PostgreSQL database and assign permissions:  
-`# Login into PostgreSQL with the command line client -`  
-`# replace 'user' with your admin/root user name:`  
+
+- Create the PostgreSQL database and assign permissions:
+
+Login into PostgreSQL with the command line client - replace 'user' with your admin/root user name:
+
 `psql -U user postgres`  
-`# Then, within the psql shell, issue the commands:`  
+
+Then, within the psql shell, issue the commands:
+
 `CREATE DATABASE dna_admin_dev;`  
 `GRANT ALL PRIVILEGES ON DATABASE dna_admin_dev to dna_admin;`  
 `ALTER DATABASE dna_admin_dev owner to dna_admin;`  
+
 **Make sure the database creds (e.g. "dna_admin" in the commands above) match those in `.env.development` !**
-1. Install dependencies:  
+
+- Install dependencies:
+
 `bundle install`
-1. Issue the following rails/rake commands to install Spree (including database data and image assets):  
+
+- Issue the following rails/rake commands to install Spree (including database data and image assets):
+
 `rails g spree:install --user_class=Spree::User`  
 `rails g spree:auth:install`  
 `rails g spree_gateway:install`  
+
 **Notes:**  
+
 While running these `rails g spree` commands, you will receive some warnings:  
+
 `conflict  config/initializers/spree.rb`  
 `Overwrite ...config/initializers/spree.rb? (enter "h" for help) [Ynaqdhm]`  
+
 and  
+
 `conflict  config/initializers/devise.rb`  
 `Overwrite ...config/initializers/devise.rb? (enter "h" for help) [Ynaqdhm]`  
+
 Answer 'Y' to these prompts.  
+
 The command `rails g spree:install --user_class=Spree::User` will also ask for the admin user/password:  
+
 `Create the admin user (press enter for defaults).`  
 `Email [spree@example.com]:`  
 `Password [spree123]:`  
+
 You can accept these defaults (or override them, and remember the values you entered).  
-1. The above `rails g spree` commands have made a few modifications which we don't want - to revert these, do:  
-`git checkout -- config/application.rb config/initializers/spree.rb config/routes.rb \`  
-`  config/initializers/devise.rb vendor/assets/javascripts/spree/frontend/all.js`
+
+- The above `rails g spree` commands have made a few modifications which we don't want - to revert these, do:  
+
+`git checkout -- config/application.rb config/initializers/spree.rb config/routes.rb config/initializers/devise.rb vendor/assets/javascripts/spree/frontend/all.js`
 
 Do not attempt to start the app yet (`rails s`) - we need to complete the database setup first.
 
@@ -90,25 +122,60 @@ This is used to manage (migrations, schema) the single database for all of the o
 
 Local installation:
 
-1. Clone this repo
-1. Copy `.env.example` to `.env.development`
-1. Edit `.env.development`: change `DATABASE_PORT` from `2345` to `5432`
-1. Install dependencies:  
+- Clone this repo
+
+- Copy `.env.example` to `.env.development`
+
+- Edit `.env.development`: change `DATABASE_PORT` from `2345` to `5432`
+
+- Install dependencies:
+
 `bundle install`
-1. Issue the following rake command:  
+
+- Issue the following rake command:
+
 `rake db:migrate`  
 
 ## DNA API (Github repo: `dna-api`)
 
 Local installation:
 
-1. Clone this repo
-1. Copy `.env.example` to `.env.development`
-1. Edit `.env.development`:  
+- Clone this repo
+
+- Copy `.env.example` to `.env.development`
+
+- Edit `.env.development`:
+
 Change `DATABASE_PORT` from `2345` to `5432`  
 Give PUSHER_APP some value, e.g. `PUSHER_APP_ID=foo` (otherwise the app won't start)  
-1. Install dependencies:  
+
+- Install dependencies:
+
 `bundle install`
+
+## DNA Frontend (Github repo: `dna-frontend`)
+
+Local installation:
+
+- Clone this repo
+
+- Copy `.env.example` to `.env`
+
+(the env vars in .env aren't used yet, but if `.env` is missing then you will get a warning when running  `yarn start:dev`)
+
+- Install dependencies:
+
+`yarn`
+
+- Run it:
+
+`yarn start:dev`
+
+*Note:*
+
+If you have the backend (dna-admin or dna-api) running, then you will likely run into a port conflict, because they are also using port 3000. To work around this, run the frontend on another port, e.g:
+
+`PORT=3002 yarn start:dev`
 
 ## Testing your installation
 
@@ -127,6 +194,5 @@ You can enter `rails routes` on the command line to see which routes the API sup
 
 `http://localhost:3001/v1/products`
 
-to get a complete listing of products from the Spree product catalog. The reason why this work is simply a "resource route" definition for Products in `config/routes.rb`, which then generates a set of CRUD routes on the product table.
-
+to get a complete listing of products from the Spree product catalog. The reason why this work is simply a "resource route" definition for Products in `config/routes.rb`, which then generates a set of CRUD routes on the product table.  
 
