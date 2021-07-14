@@ -1,5 +1,5 @@
 ---
-title: API Reference
+title: DNA Docs
 
 language_tabs: # must be one of https://git.io/vQNgJ
   - shell
@@ -8,232 +8,191 @@ language_tabs: # must be one of https://git.io/vQNgJ
   - javascript
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
   - <a href='https://github.com/lord/slate'>Documentation Powered by Slate</a>
-
-includes:
-  - errors
 
 search: true
 ---
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the technical documentation for the Material Instinct LLC - DNA Boilerplate.
 
-We have language bindings in Shell, Ruby, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+# Local installation (without Docker)
 
-This example API documentation page was created with [Slate](https://github.com/lord/slate). Feel free to edit it and use it as a base for your own API's documentation.
+The platform has 4 parts which need to be installed in this order:  
 
-# Authentication
+- DNA Admin  
+- DNA Database  
+- DNA API  
+- DNA Frontend  
 
-> To authorize, use this code:
+You will need access to each individual repository, or you will need to be added to an internal team with the appropriate access privileges.
 
-```ruby
-require 'kittn'
+Requirements: ruby 2.6.2, rails 5.2.2, Postgres, node.js 10.16
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-```
+## DNA Admin (Github repo: `dna-admin`)
 
-```python
-import kittn
+Admin app for Spree.
 
-api = kittn.authorize('meowmeowmeow')
-```
+Local installation:
 
-```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
-```
+- Make sure you have `ImageMagick` installed; on Mac OSX you can do:
 
-```javascript
-const kittn = require('kittn');
+`brew install imagemagick`  
 
-let api = kittn.authorize('meowmeowmeow');
-```
+Brew will install ImageMagick in a directory similar to the following:   
+`/usr/local/Cellar/imagemagick/7.0.8-49/bin/magick`  
 
-> Make sure to replace `meowmeowmeow` with your API key.
+You can add this dir to your PATH, for instance append the following to your `~/.bashrc` file:
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
+`export PATH=$PATH:/usr/local/Cellar/imagemagick/7.0.8-49/bin`  
 
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
+followed by the command `source ~/.bashrc`.
 
-`Authorization: meowmeowmeow`
+- Clone this repo
 
-<aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
-</aside>
+- Copy `.env.example` to `.env.development`
 
-# Kittens
+- Edit `.env.development`:
 
-## Get All Kittens
+Change `DATABASE_PORT` from `2345` to `5432`  
+Change `COMPANY_LOGO` from `path/to/file.png` to `dwell_logo.png`  
 
-```ruby
-require 'kittn'
+- Create the PostgreSQL user that we need:
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
+`createuser --pwprompt dna_admin`  
 
-```python
-import kittn
+At the prompt, enter the DB password from the `.env.development` file.
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
+- Create the PostgreSQL database and assign permissions:
 
-```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
+Login into PostgreSQL with the command line client - replace 'user' with your admin/root user name:
 
-```javascript
-const kittn = require('kittn');
+`psql -U user postgres`  
 
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
+Then, within the psql shell, issue the commands:
 
-> The above command returns JSON structured like this:
+`CREATE DATABASE dna_admin_dev;`  
+`GRANT ALL PRIVILEGES ON DATABASE dna_admin_dev to dna_admin;`  
+`ALTER DATABASE dna_admin_dev owner to dna_admin;`  
 
-```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
-```
+**Make sure the database creds (e.g. "dna_admin" in the commands above) match those in `.env.development` !**
 
-This endpoint retrieves all kittens.
+- Install dependencies:
 
-### HTTP Request
+`bundle install`
 
-`GET http://example.com/api/kittens`
+- Issue the following rails/rake commands to install Spree (including database data and image assets):
 
-### Query Parameters
+`rails g spree:install --user_class=Spree::User`  
+`rails g spree:auth:install`  
+`rails g spree_gateway:install`  
 
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
+**Notes:**  
 
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
+While running these `rails g spree` commands, you will receive some warnings:  
 
-## Get a Specific Kitten
+`conflict  config/initializers/spree.rb`  
+`Overwrite ...config/initializers/spree.rb? (enter "h" for help) [Ynaqdhm]`  
 
-```ruby
-require 'kittn'
+and  
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
+`conflict  config/initializers/devise.rb`  
+`Overwrite ...config/initializers/devise.rb? (enter "h" for help) [Ynaqdhm]`  
 
-```python
-import kittn
+Answer 'Y' to these prompts.  
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
+The command `rails g spree:install --user_class=Spree::User` will also ask for the admin user/password:  
 
-```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
-```
+`Create the admin user (press enter for defaults).`  
+`Email [spree@example.com]:`  
+`Password [spree123]:`  
 
-```javascript
-const kittn = require('kittn');
+You can accept these defaults (or override them, and remember the values you entered).  
 
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
+- The above `rails g spree` commands have made a few modifications which we don't want - to revert these, do:  
 
-> The above command returns JSON structured like this:
+`git checkout -- config/application.rb config/initializers/spree.rb config/routes.rb config/initializers/devise.rb vendor/assets/javascripts/spree/frontend/all.js`
 
-```json
-{
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
-}
-```
+Do not attempt to start the app yet (`rails s`) - we need to complete the database setup first.
 
-This endpoint retrieves a specific kitten.
+## DNA Database (Github repo: `dna-database`)
 
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
+This is used to manage (migrations, schema) the single database for all of the other apps.
 
-### HTTP Request
+Local installation:
 
-`GET http://example.com/kittens/<ID>`
+- Clone this repo
 
-### URL Parameters
+- Copy `.env.example` to `.env.development`
 
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to retrieve
+- Edit `.env.development`: change `DATABASE_PORT` from `2345` to `5432`
 
-## Delete a Specific Kitten
+- Install dependencies:
 
-```ruby
-require 'kittn'
+`bundle install`
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
+- Issue the following rake command:
 
-```python
-import kittn
+`rake db:migrate`  
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
+## DNA API (Github repo: `dna-api`)
 
-```shell
-curl "http://example.com/api/kittens/2"
-  -X DELETE
-  -H "Authorization: meowmeowmeow"
-```
+Local installation:
 
-```javascript
-const kittn = require('kittn');
+- Clone this repo
 
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
-```
+- Copy `.env.example` to `.env.development`
 
-> The above command returns JSON structured like this:
+- Edit `.env.development`:
 
-```json
-{
-  "id": 2,
-  "deleted" : ":("
-}
-```
+Change `DATABASE_PORT` from `2345` to `5432`  
+Give PUSHER_APP some value, e.g. `PUSHER_APP_ID=foo` (otherwise the app won't start)  
 
-This endpoint deletes a specific kitten.
+- Install dependencies:
 
-### HTTP Request
+`bundle install`
 
-`DELETE http://example.com/kittens/<ID>`
+## DNA Frontend (Github repo: `dna-frontend`)
 
-### URL Parameters
+Local installation:
 
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to delete
+- Clone this repo
+
+- Copy `.env.example` to `.env`
+
+(the env vars in .env aren't used yet, but if `.env` is missing then you will get a warning when running  `yarn start:dev`)
+
+- Install dependencies:
+
+`yarn`
+
+- Run it:
+
+`yarn start:dev`
+
+*Note:*
+
+If you have the backend (dna-admin or dna-api) running, then you will likely run into a port conflict, because they are also using port 3000. To work around this, run the frontend on another port, e.g:
+
+`PORT=3002 yarn start:dev`
+
+## Testing your installation
+
+Move into the 'dna-admin' directory, execute `rails s` and enter http://localhost:3000 in your browser.  
+You should see a product listing with images.
+
+Enter http://localhost:3000/admin in your browser and log in with spree@example.com/spree123 or with whatever you chose for the admin user. You can manage the system here.
+
+Next move into the 'dna-api' directory and execute:  
+
+`PORT=3001 rails s`  
+
+and enter http://localhost:3001 in your browser - this will show the 'index' page.  
+
+You can enter `rails routes` on the command line to see which routes the API supports. On of them is `GET v1/products`, so we can enter in the browser:
+
+`http://localhost:3001/v1/products`
+
+to get a complete listing of products from the Spree product catalog. The reason why this work is simply a "resource route" definition for Products in `config/routes.rb`, which then generates a set of CRUD routes on the product table.  
 
